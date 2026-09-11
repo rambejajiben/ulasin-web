@@ -29,9 +29,9 @@
         <!-- Box Login -->
         <div id="login-box" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8">
             <label class="block text-sm font-bold text-slate-800 mb-2">Kode Kelola</label>
-            <input type="text" id="input-kode-kelola" placeholder="ULS-XXXXXX" class="w-full px-4 py-3 mb-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg uppercase font-mono">
+            <input type="text" id="input-kode-kelola" placeholder="ULS-XXXXXX" class="w-full px-4 py-3 mb-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg uppercase font-mono disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
             
-            <button onclick="aksesQR()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors mb-3">
+            <button id="btn-akses" onclick="aksesQR()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors mb-3">
                 Akses QR Saya
             </button>
             
@@ -72,11 +72,20 @@
             <p id="update-success" class="text-green-600 text-sm mt-3 text-center hidden font-bold">Link berhasil diperbarui!</p>
         </div>
 
+        <!-- Bantuan WhatsApp -->
+        <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+            <p class="text-xs text-slate-500 mb-2">Butuh bantuan pengelolaan QR?</p>
+            <a href="https://wa.me/6281234567890" target="_blank" class="inline-block bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                Chat WhatsApp
+            </a>
+        </div>
+
     </div>
 
-    <p class="text-xs text-slate-400 mt-8">Kode Kelola bersifat rahasia. Jangan bagikan kepada orang lain.</p>
+    <p class="text-xs text-slate-400 mt-8 mb-6">Kode Kelola bersifat rahasia. Jangan bagikan kepada orang lain.</p>
 
     <script>
+        // MASUKKAN KUNCI SUPABASE ANDA DI SINI
         const supabaseUrl = 'https://vpzcpbzwxdbcqsazomvj.supabase.co';
         const supabaseKey = 'sb_publishable_UsXjJa42F6ItFqs3PYXDxw_FjRweh-L';
         
@@ -93,6 +102,7 @@
         async function aksesQR() {
             const inputKode = document.getElementById('input-kode-kelola').value.trim().toUpperCase();
             const alertBox = document.getElementById('login-alert');
+            const btnAkses = document.getElementById('btn-akses');
             
             if (!inputKode) return;
 
@@ -104,12 +114,22 @@
 
             if (error || !data) {
                 alertBox.className = "text-sm px-4 py-3 rounded-xl border bg-red-50 border-red-200 text-red-600 block mt-3";
-                alertBox.innerText = "Kode Kelola tidak ditemukan.";
+                alertBox.innerText = "Kode Kelola tidak ditemukan atau salah.";
             } else {
                 alertBox.className = "text-sm px-4 py-3 rounded-xl border bg-green-50 border-green-200 text-green-700 block mt-3 font-bold";
                 alertBox.innerText = "✅ QR berhasil ditemukan.";
                 
                 currentCardId = data.id;
+                
+                // 1. Kunci input agar tidak bisa diedit lagi
+                document.getElementById('input-kode-kelola').disabled = true;
+
+                // 2. Ubah fungsi tombol untuk membuka link QR di tab baru
+                btnAkses.innerText = "Cek Hasil Scan QR";
+                btnAkses.className = "w-full bg-slate-100 text-blue-700 border border-slate-300 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 transition-colors mb-3";
+                btnAkses.onclick = function() {
+                    window.open(window.location.origin + '/?code=' + data.kode_qr, '_blank');
+                };
                 
                 // Format Tanggal
                 const dateObj = new Date(data.created_at);
@@ -140,7 +160,7 @@
                 msg.classList.remove('hidden');
                 setTimeout(() => msg.classList.add('hidden'), 3000);
             } else {
-                alert("Gagal memperbarui link.");
+                alert("Gagal memperbarui link. Silakan coba lagi.");
             }
         }
     </script>
