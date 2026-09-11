@@ -190,26 +190,34 @@ async function generateLink() {
             btnGenerate.disabled = true;
 
             try {
-                // Mengirim link ke mesin backend Vercel yang kita buat
-                const response = await fetch('/api/generate?url=' + encodeURIComponent(linkInput));
+                // Menggunakan AllOrigins sebagai jembatan untuk melewati blokir keamanan browser
+                const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(linkInput);
+                const response = await fetch(proxyUrl);
                 const data = await response.json();
 
-                if (data.reviewLink) {
-                    finalLink = data.reviewLink;
-                    errorBox.classList.add('hidden');
-                    successBox.classList.remove('hidden');
+                if (data.contents) {
+                    // Cari Place ID Google (selalu diawali ChIJ) dari kode sumber halaman
+                    const match = data.contents.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
                     
-                    displayLink.href = finalLink;
-                    displayLink.innerText = finalLink;
-                    btnCekLink.href = finalLink;
-                    
-                    btnAktifkan.disabled = false;
+                    if (match && match[1]) {
+                        finalLink = `https://search.google.com/local/writereview?placeid=${match[1]}`;
+                        errorBox.classList.add('hidden');
+                        successBox.classList.remove('hidden');
+                        
+                        displayLink.href = finalLink;
+                        displayLink.innerText = finalLink;
+                        btnCekLink.href = finalLink;
+                        
+                        btnAktifkan.disabled = false;
+                    } else {
+                        throw new Error("ID Google Maps tidak ditemukan dari link tersebut.");
+                    }
                 } else {
-                    throw new Error("Gagal membaca ID dari Google Maps.");
+                    throw new Error("Gagal memuat halaman Maps.");
                 }
             } catch (error) {
                 successBox.classList.add('hidden');
-                errorBox.innerText = "Gagal meng-generate link otomatis. Pastikan link berasal dari tombol 'Bagikan' Google Maps.";
+                errorBox.innerText = "Gagal meng-generate link otomatis. Pastikan link Google Maps benar dan tidak diprivasi.";
                 errorBox.classList.remove('hidden');
                 btnAktifkan.disabled = true;
             }
