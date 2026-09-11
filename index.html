@@ -182,25 +182,18 @@ async function generateLink() {
                 return;
             }
 
-            // Ubah tampilan tombol saat memproses
             const originalText = btnGenerate.innerText;
             btnGenerate.innerText = "Mengekstrak Link Review (Mohon Tunggu)...";
             btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
             btnGenerate.disabled = true;
 
             try {
-                // Mencoba server jembatan utama (CodeTabs)
-                const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(linkInput);
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) throw new Error("Gagal mengakses proxy utama");
-                
-                const html = await response.text();
-                // Regex mencari Place ID (Kombinasi huruf/angka yang selalu diawali ChIJ)
-                const match = html.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
-                
-                if (match && match[1]) {
-                    finalLink = `https://search.google.com/local/writereview?placeid=${match[1]}`;
+                // Memanggil server API pribadi Anda di Vercel
+                const response = await fetch('/api/generate?url=' + encodeURIComponent(linkInput));
+                const data = await response.json();
+
+                if (data.reviewLink) {
+                    finalLink = data.reviewLink;
                     errorBox.classList.add('hidden');
                     successBox.classList.remove('hidden');
                     
@@ -210,38 +203,15 @@ async function generateLink() {
                     
                     btnAktifkan.disabled = false;
                 } else {
-                    throw new Error("ID Google Maps tidak ditemukan dari tautan ini.");
+                    throw new Error(data.error || "Gagal membaca ID dari Google Maps.");
                 }
             } catch (error) {
-                // Mencoba server jembatan cadangan jika yang pertama gagal
-                try {
-                    const fallbackUrl = 'https://corsproxy.io/?' + encodeURIComponent(linkInput);
-                    const res = await fetch(fallbackUrl);
-                    const htmlText = await res.text();
-                    const match2 = htmlText.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
-                    
-                    if (match2 && match2[1]) {
-                        finalLink = `https://search.google.com/local/writereview?placeid=${match2[1]}`;
-                        errorBox.classList.add('hidden');
-                        successBox.classList.remove('hidden');
-                        
-                        displayLink.href = finalLink;
-                        displayLink.innerText = finalLink;
-                        btnCekLink.href = finalLink;
-                        
-                        btnAktifkan.disabled = false;
-                    } else {
-                        throw new Error("Gagal fallback.");
-                    }
-                } catch (fallbackError) {
-                    successBox.classList.add('hidden');
-                    errorBox.innerText = "Sistem gagal mengekstrak link secara otomatis karena proteksi Google. Pastikan link Google Maps benar dan tidak diprivasi.";
-                    errorBox.classList.remove('hidden');
-                    btnAktifkan.disabled = true;
-                }
+                successBox.classList.add('hidden');
+                errorBox.innerText = "Server masih melakukan loading deployment atau link tidak valid. Silakan coba lagi dalam beberapa detik.";
+                errorBox.classList.remove('hidden');
+                btnAktifkan.disabled = true;
             }
 
-            // Kembalikan kondisi tombol
             btnGenerate.innerText = originalText;
             btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
             btnGenerate.disabled = false;
