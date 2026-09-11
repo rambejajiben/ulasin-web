@@ -184,22 +184,44 @@ async function generateLink() {
 
             // Ubah tampilan tombol saat memproses
             const originalText = btnGenerate.innerText;
-            btnGenerate.innerText = "Mengekstrak Link Review...";
+            btnGenerate.innerText = "Mengekstrak Link Review (Mohon Tunggu)...";
             btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
             btnGenerate.disabled = true;
 
             try {
-                // Menggunakan AllOrigins sebagai jembatan untuk melewati blokir keamanan browser
-                const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(linkInput);
+                // Mencoba server jembatan utama (CodeTabs)
+                const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(linkInput);
                 const response = await fetch(proxyUrl);
-                const data = await response.json();
-
-                if (data.contents) {
-                    // Cari Place ID Google (selalu diawali ChIJ) dari kode sumber halaman
-                    const match = data.contents.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
+                
+                if (!response.ok) throw new Error("Gagal mengakses proxy utama");
+                
+                const html = await response.text();
+                // Regex mencari Place ID (Kombinasi huruf/angka yang selalu diawali ChIJ)
+                const match = html.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
+                
+                if (match && match[1]) {
+                    finalLink = `https://search.google.com/local/writereview?placeid=${match[1]}`;
+                    errorBox.classList.add('hidden');
+                    successBox.classList.remove('hidden');
                     
-                    if (match && match[1]) {
-                        finalLink = `https://search.google.com/local/writereview?placeid=${match[1]}`;
+                    displayLink.href = finalLink;
+                    displayLink.innerText = finalLink;
+                    btnCekLink.href = finalLink;
+                    
+                    btnAktifkan.disabled = false;
+                } else {
+                    throw new Error("ID Google Maps tidak ditemukan dari tautan ini.");
+                }
+            } catch (error) {
+                // Mencoba server jembatan cadangan jika yang pertama gagal
+                try {
+                    const fallbackUrl = 'https://corsproxy.io/?' + encodeURIComponent(linkInput);
+                    const res = await fetch(fallbackUrl);
+                    const htmlText = await res.text();
+                    const match2 = htmlText.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
+                    
+                    if (match2 && match2[1]) {
+                        finalLink = `https://search.google.com/local/writereview?placeid=${match2[1]}`;
                         errorBox.classList.add('hidden');
                         successBox.classList.remove('hidden');
                         
@@ -209,19 +231,17 @@ async function generateLink() {
                         
                         btnAktifkan.disabled = false;
                     } else {
-                        throw new Error("ID Google Maps tidak ditemukan dari link tersebut.");
+                        throw new Error("Gagal fallback.");
                     }
-                } else {
-                    throw new Error("Gagal memuat halaman Maps.");
+                } catch (fallbackError) {
+                    successBox.classList.add('hidden');
+                    errorBox.innerText = "Sistem gagal mengekstrak link secara otomatis karena proteksi Google. Pastikan link Google Maps benar dan tidak diprivasi.";
+                    errorBox.classList.remove('hidden');
+                    btnAktifkan.disabled = true;
                 }
-            } catch (error) {
-                successBox.classList.add('hidden');
-                errorBox.innerText = "Gagal meng-generate link otomatis. Pastikan link Google Maps benar dan tidak diprivasi.";
-                errorBox.classList.remove('hidden');
-                btnAktifkan.disabled = true;
             }
 
-            // Kembalikan tombol ke semula
+            // Kembalikan kondisi tombol
             btnGenerate.innerText = originalText;
             btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
             btnGenerate.disabled = false;
