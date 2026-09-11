@@ -167,27 +167,57 @@
             }
         }
 
-        function generateLink() {
+async function generateLink() {
             const linkInput = document.getElementById('input-link').value.trim();
             const errorBox = document.getElementById('error-box');
             const successBox = document.getElementById('success-box');
             const btnAktifkan = document.getElementById('btn-aktifkan');
+            const displayLink = document.getElementById('generated-link-display');
+            const btnCekLink = document.getElementById('btn-cek-link');
+            const btnGenerate = document.querySelector('button[onclick="generateLink()"]');
 
-            if (linkInput.includes('maps.app.goo.gl') || linkInput.includes('google.com') || linkInput.includes('g.page')) {
-                finalLink = linkInput;
-                errorBox.classList.add('hidden');
-                successBox.classList.remove('hidden');
-                
-                document.getElementById('generated-link-display').href = finalLink;
-                document.getElementById('generated-link-display').innerText = finalLink;
-                document.getElementById('btn-cek-link').href = finalLink;
-                
-                btnAktifkan.disabled = false;
-            } else {
+            if (!linkInput.includes('maps') && !linkInput.includes('google')) {
+                errorBox.innerText = "Masukkan link Google Maps yang valid.";
+                errorBox.classList.remove('hidden');
                 successBox.classList.add('hidden');
+                return;
+            }
+
+            // Ubah tampilan tombol saat memproses
+            const originalText = btnGenerate.innerText;
+            btnGenerate.innerText = "Mengekstrak Link Review...";
+            btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
+            btnGenerate.disabled = true;
+
+            try {
+                // Mengirim link ke mesin backend Vercel yang kita buat
+                const response = await fetch('/api/generate?url=' + encodeURIComponent(linkInput));
+                const data = await response.json();
+
+                if (data.reviewLink) {
+                    finalLink = data.reviewLink;
+                    errorBox.classList.add('hidden');
+                    successBox.classList.remove('hidden');
+                    
+                    displayLink.href = finalLink;
+                    displayLink.innerText = finalLink;
+                    btnCekLink.href = finalLink;
+                    
+                    btnAktifkan.disabled = false;
+                } else {
+                    throw new Error("Gagal membaca ID dari Google Maps.");
+                }
+            } catch (error) {
+                successBox.classList.add('hidden');
+                errorBox.innerText = "Gagal meng-generate link otomatis. Pastikan link berasal dari tombol 'Bagikan' Google Maps.";
                 errorBox.classList.remove('hidden');
                 btnAktifkan.disabled = true;
             }
+
+            // Kembalikan tombol ke semula
+            btnGenerate.innerText = originalText;
+            btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnGenerate.disabled = false;
         }
 
         async function aktifkanKartu() {
