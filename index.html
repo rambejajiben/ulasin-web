@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulasin - Review Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="card-container" class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
+        <h1 class="text-2xl font-bold text-blue-600 mb-2">ULASIN</h1>
+        <div id="loading-screen" class="block">
+            <p class="text-gray-500 animate-pulse">Memeriksa status kartu...</p>
+        </div>
+
+        <!-- Tampilan Error -->
+        <div id="error-screen" class="hidden">
+            <p id="error-text" class="text-red-500 font-medium"></p>
+        </div>
+
+        <!-- Form Aktivasi -->
+        <div id="activation-screen" class="hidden text-left">
+            <p class="text-sm text-gray-600 mb-4 text-center">Kartu ini belum aktif. Silakan isi data bisnis Anda.</p>
+            <input type="text" id="input-nama" placeholder="Nama Bisnis (Cth: Kopi Senja)" class="w-full mb-3 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="url" id="input-link" placeholder="Link Google Review (https://...)" class="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="aktifkanKartu()" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">AKTIFKAN KARTU</button>
+        </div>
+
+        <!-- Layar Sukses -->
+        <div id="success-screen" class="hidden text-left">
+            <div class="bg-green-100 text-green-700 p-3 rounded-lg mb-4 text-center text-sm font-bold">
+                Kartu Berhasil Diaktifkan!
+            </div>
+            <p class="text-xs text-gray-500 mb-1">Kode Kelola Anda (Simpan baik-baik):</p>
+            <p id="display-kode-kelola" class="font-mono bg-gray-100 p-2 rounded border text-center font-bold mb-4"></p>
+            <p class="text-xs text-gray-500 text-center">Silakan TAP atau SCAN ulang kartu Anda untuk mencoba.</p>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN KUNCI SUPABASE ANDA DI SINI
+        const supabaseUrl = 'https://vpzcpbzwxdbcqsazomvj.supabase.co/rest/v1/';
+        const supabaseKey = 'sb_publishable_UsXjJa42F6ItFqs3PYXDxw_FjRweh-L';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const kodeQr = urlParams.get('code');
+
+        async function cekStatusKartu() {
+            if (!kodeQr) {
+                tampilkanError("Kartu tidak valid (Kode tidak ditemukan).");
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('cards')
+                .select('*')
+                .eq('kode_qr', kodeQr)
+                .single();
+
+            if (error || !data) {
+                tampilkanError("Kartu belum terdaftar di sistem Ulasin.");
+                return;
+            }
+
+            // LOGIKA REDIRECT
+            if (data.status === 'aktif' && data.link_google) {
+                window.location.replace(data.link_google);
+            } else {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('activation-screen').classList.remove('hidden');
+            }
+        }
+
+        async function aktifkanKartu() {
+            const namaBisnis = document.getElementById('input-nama').value;
+            const linkGoogle = document.getElementById('input-link').value;
+
+            if(!namaBisnis || !linkGoogle) {
+                alert("Harap isi semua kolom!");
+                return;
+            }
+
+            // Generate Kode Kelola Acak
+            const kodeKelola = 'ULS-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+
+            const { error } = await supabase
+                .from('cards')
+                .update({ 
+                    nama_bisnis: namaBisnis, 
+                    link_google: linkGoogle, 
+                    status: 'aktif',
+                    kode_kelola: kodeKelola
+                })
+                .eq('kode_qr', kodeQr);
+
+            if (error) {
+                alert("Terjadi kesalahan saat menyimpan data.");
+            } else {
+                document.getElementById('activation-screen').classList.add('hidden');
+                document.getElementById('success-screen').classList.remove('hidden');
+                document.getElementById('display-kode-kelola').innerText = kodeKelola;
+            }
+        }
+
+        function tampilkanError(pesan) {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('error-screen').classList.remove('hidden');
+            document.getElementById('error-text').innerText = pesan;
+        }
+
+        // Jalankan pengecekan saat halaman dibuka
+        window.onload = cekStatusKartu;
+    </script>
+</body>
+</html>
