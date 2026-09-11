@@ -3,122 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aktivasi Kartu Ulasin</title>
-    <!-- Google Fonts: Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
+    <title>Ulasin - Aktivasi QR & NFC</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
-                }
-            }
-        }
-    </script>
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen flex items-center justify-center p-5 font-sans text-gray-800">
+<body class="bg-slate-50 min-h-screen flex flex-col items-center py-10 px-4 text-slate-800">
 
-    <div class="w-full max-w-md bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl border border-white overflow-hidden relative">
-        <!-- Header Aksen -->
-        <div class="h-2 w-full bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-        
-        <div class="p-8">
-            <!-- Logo / Judul -->
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                    <i class="fa-solid fa-star text-3xl text-blue-600"></i>
-                </div>
-                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">ULASIN</h1>
-                <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">Smart Review Card</p>
-            </div>
-
-            <!-- Loading Screen -->
-            <div id="loading-screen" class="text-center py-6 block">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
-                <p class="text-sm text-gray-500 animate-pulse font-medium">Memeriksa identitas kartu...</p>
-            </div>
-
-            <!-- Tampilan Error -->
-            <div id="error-screen" class="hidden text-center py-4">
-                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
-                </div>
-                <p id="error-text" class="text-red-500 font-semibold mb-2"></p>
-                <p class="text-xs text-gray-400">Pastikan Anda memindai kartu yang resmi.</p>
-            </div>
-
-            <!-- Form Aktivasi -->
-            <div id="activation-screen" class="hidden">
-                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 text-center">
-                    <p class="text-sm text-indigo-800 font-medium">Kartu ini belum aktif.</p>
-                    <p class="text-xs text-indigo-600 mt-1">Silakan lengkapi profil bisnis Anda di bawah ini.</p>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1 ml-1">Nama Bisnis</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-store text-gray-400"></i>
-                            </div>
-                            <input type="text" id="input-nama" placeholder="Cth: Kopi Senja Jogja" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1 ml-1">Tautan Google Maps</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-link text-gray-400"></i>
-                            </div>
-                            <input type="url" id="input-link" placeholder="https://maps.app.goo.gl/..." class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm">
-                        </div>
-                    </div>
-
-                    <button onclick="aktifkanKartu()" class="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-bolt"></i> AKTIFKAN KARTU
-                    </button>
-                </div>
-            </div>
-
-            <!-- Layar Sukses -->
-            <div id="success-screen" class="hidden text-center">
-                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 scale-in-center">
-                    <i class="fa-solid fa-check text-4xl text-green-500"></i>
-                </div>
-                <h2 class="text-xl font-bold text-gray-800 mb-2">Aktivasi Berhasil!</h2>
-                <p class="text-sm text-gray-500 mb-6">Kartu Anda kini sudah terhubung dengan Google Maps.</p>
-                
-                <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6">
-                    <p class="text-xs text-gray-500 mb-2 font-medium">Kode Kelola (Simpan untuk ubah data):</p>
-                    <p id="display-kode-kelola" class="font-mono text-lg text-gray-800 font-bold tracking-widest"></p>
-                </div>
-                
-                <p class="text-xs text-gray-400">Silakan TAP atau SCAN ulang kartu Anda untuk mencoba.</p>
-            </div>
-        </div>
+    <div class="text-center mb-6">
+        <h1 class="text-4xl font-extrabold text-blue-700 tracking-tight">ULASIN<span class="text-slate-800">.ID</span></h1>
+        <p class="text-xs text-slate-500 mt-1">Bikin Pelanggan Lebih Mudah Kasih Google Review ⭐</p>
     </div>
 
+    <div class="text-center mb-8 max-w-md">
+        <h2 class="text-2xl font-bold mb-2">AKTIVASI QR & NFC</h2>
+        <p class="text-sm text-slate-500">Masukkan data bisnis dan link Google Maps. Setelah aktif, QR & NFC akan langsung mengarahkan pelanggan ke halaman Google Review.</p>
+    </div>
+
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8">
+        
+        <div id="loading-screen" class="text-center py-10">
+            <p class="text-slate-500 animate-pulse font-semibold">Memeriksa sistem...</p>
+        </div>
+
+        <!-- Form Aktivasi -->
+        <div id="activation-screen" class="hidden">
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Kode QR / NFC</label>
+                <div class="bg-blue-50 border border-blue-100 text-slate-800 font-bold text-lg rounded-xl px-4 py-3" id="display-qr-code">
+                    -
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-slate-800 mb-2">Nama Bisnis</label>
+                <input type="text" id="input-nama" placeholder="Contoh: Kopi Senja" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-slate-800 mb-2">Link Google Maps Bisnis Anda</label>
+                <input type="url" id="input-link" placeholder="https://maps.app.goo.gl/..." class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            </div>
+
+            <button onclick="generateLink()" class="w-full bg-slate-100 hover:bg-slate-200 text-blue-700 font-bold py-3 px-4 rounded-xl transition-colors mb-4 border border-slate-200">
+                Generate Google Review Link
+            </button>
+
+            <div id="error-box" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">
+                Google Review Link belum bisa ditemukan otomatis. Pastikan link berasal dari tombol Bagikan di Google Maps.
+            </div>
+
+            <div id="success-box" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Google Review Link</p>
+                <a href="#" target="_blank" id="generated-link-display" class="text-blue-600 text-sm break-all hover:underline mb-3 block"></a>
+                <a href="#" target="_blank" id="btn-cek-link" class="block w-full bg-white border border-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg text-center hover:bg-slate-50 transition-colors">
+                    Cek Link
+                </a>
+            </div>
+
+            <button id="btn-aktifkan" onclick="aktifkanKartu()" disabled class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+                AKTIFKAN QR & NFC
+            </button>
+
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">Butuh bantuan aktivasi?</p>
+                <a href="https://wa.me/6281234567890" target="_blank" class="inline-block bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                    Chat WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- Layar Sukses (Sesuai Referensi Gambar) -->
+        <div id="success-screen" class="hidden">
+            
+            <div class="bg-blue-400 text-white text-center font-bold py-3 px-4 rounded-xl mb-4">
+                QR & NFC SUDAH AKTIF
+            </div>
+
+            <div class="bg-green-50 text-green-700 text-sm p-4 rounded-xl mb-6">
+                Berhasil! QR & NFC sekarang aktif dan akan menuju Google Review.
+            </div>
+
+            <div class="bg-green-50/50 border border-green-100 rounded-2xl p-5 mb-6">
+                <div class="mb-4">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-1">
+                        🔐 KODE KELOLA QR INI
+                    </p>
+                    <p id="result-kode-kelola" class="text-3xl font-black text-slate-900 tracking-wide"></p>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        Kode ini khusus untuk QR ini. Simpan karena diperlukan jika ingin mengganti link Google Review di kemudian hari.
+                    </p>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-1">
+                        🔗 LINK KELOLA QR
+                    </p>
+                    <a href="#" id="result-link-kelola" target="_blank" class="text-sm text-blue-600 break-all hover:underline block"></a>
+                </div>
+
+                <button onclick="salinData('link')" class="w-full bg-slate-100 hover:bg-slate-200 text-blue-700 font-bold py-3 px-4 rounded-xl transition-colors mb-3 border border-slate-200 flex justify-center items-center gap-2 text-sm">
+                    🔗 Salin Link Kelola
+                </button>
+                <button onclick="salinData('kode')" class="w-full bg-slate-100 hover:bg-slate-200 text-blue-700 font-bold py-3 px-4 rounded-xl transition-colors mb-3 border border-slate-200 flex justify-center items-center gap-2 text-sm">
+                    📋 Salin Kode Kelola
+                </button>
+                <button onclick="simpanKeWA()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors mb-3 flex justify-center items-center gap-2 text-sm shadow-sm">
+                    📱 Simpan ke WhatsApp
+                </button>
+                <a href="#" id="btn-kelola-sekarang" class="block w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-center font-bold py-3 px-4 rounded-xl transition-colors border border-slate-200 text-sm">
+                    🔧 Kelola QR Ini
+                </a>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">Butuh bantuan aktivasi?</p>
+                <a href="https://wa.me/6281234567890" target="_blank" class="inline-block bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                    Chat WhatsApp
+                </a>
+            </div>
+        </div>
+
+    </div>
+    
+    <p class="text-xs text-slate-400 mt-8">© ULASIN.ID — Kartu Review QR + NFC Google Review</p>
+
     <script>
-        // PASTIKAN MENGGANTI DUA BARIS INI DENGAN KUNCI ANDA SEBELUM DI-SAVE
         const supabaseUrl = 'https://vpzcpbzwxdbcqsazomvj.supabase.co';
         const supabaseKey = 'sb_publishable_UsXjJa42F6ItFqs3PYXDxw_FjRweh-L';
         
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         const urlParams = new URLSearchParams(window.location.search);
         const kodeQr = urlParams.get('code');
+        let finalLink = "";
 
         async function cekStatusKartu() {
             if (!kodeQr) {
-                tampilkanError("Kode kartu tidak ditemukan.");
+                document.getElementById('loading-screen').innerHTML = '<p class="text-red-500 font-bold">Kode tidak ditemukan.</p>';
                 return;
             }
+            
+            document.getElementById('display-qr-code').innerText = kodeQr;
+
             const { data, error } = await supabaseClient
                 .from('cards')
                 .select('*')
@@ -126,54 +155,85 @@
                 .single();
 
             if (error || !data) {
-                tampilkanError("Kartu belum terdaftar di sistem.");
+                document.getElementById('loading-screen').innerHTML = '<p class="text-red-500 font-bold">Kartu belum terdaftar di sistem.</p>';
                 return;
             }
 
             if (data.status === 'aktif' && data.link_google) {
                 window.location.replace(data.link_google);
             } else {
-                setTimeout(() => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    document.getElementById('activation-screen').classList.remove('hidden');
-                }, 800); // Sedikit jeda agar loading terlihat mulus
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('activation-screen').classList.remove('hidden');
+            }
+        }
+
+        function generateLink() {
+            const linkInput = document.getElementById('input-link').value.trim();
+            const errorBox = document.getElementById('error-box');
+            const successBox = document.getElementById('success-box');
+            const btnAktifkan = document.getElementById('btn-aktifkan');
+
+            if (linkInput.includes('maps.app.goo.gl') || linkInput.includes('google.com') || linkInput.includes('g.page')) {
+                finalLink = linkInput;
+                errorBox.classList.add('hidden');
+                successBox.classList.remove('hidden');
+                
+                document.getElementById('generated-link-display').href = finalLink;
+                document.getElementById('generated-link-display').innerText = finalLink;
+                document.getElementById('btn-cek-link').href = finalLink;
+                
+                btnAktifkan.disabled = false;
+            } else {
+                successBox.classList.add('hidden');
+                errorBox.classList.remove('hidden');
+                btnAktifkan.disabled = true;
             }
         }
 
         async function aktifkanKartu() {
             const namaBisnis = document.getElementById('input-nama').value;
-            const linkGoogle = document.getElementById('input-link').value;
+            if(!namaBisnis || !finalLink) return;
 
-            if(!namaBisnis || !linkGoogle) {
-                alert("Harap isi seluruh kolom yang tersedia!");
-                return;
-            }
-
-            const kodeKelola = 'ULS-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            const kodeKelola = 'ULS-' + Math.random().toString(36).substr(2, 8).toUpperCase();
 
             const { error } = await supabaseClient
                 .from('cards')
-                .update({ 
-                    nama_bisnis: namaBisnis, 
-                    link_google: linkGoogle, 
-                    status: 'aktif',
-                    kode_kelola: kodeKelola
-                })
+                .update({ nama_bisnis: namaBisnis, link_google: finalLink, status: 'aktif', kode_kelola: kodeKelola })
                 .eq('kode_qr', kodeQr);
 
-            if (error) {
-                alert("Terjadi kesalahan sistem saat aktivasi.");
-            } else {
+            if (!error) {
                 document.getElementById('activation-screen').classList.add('hidden');
                 document.getElementById('success-screen').classList.remove('hidden');
-                document.getElementById('display-kode-kelola').innerText = kodeKelola;
+                
+                const linkKelola = window.location.origin + '/kelola.html?code=' + kodeKelola;
+                
+                document.getElementById('result-kode-kelola').innerText = kodeKelola;
+                document.getElementById('result-link-kelola').innerText = linkKelola;
+                document.getElementById('result-link-kelola').href = linkKelola;
+                document.getElementById('btn-kelola-sekarang').href = linkKelola;
+            } else {
+                alert("Terjadi kesalahan sistem saat aktivasi.");
             }
         }
 
-        function tampilkanError(pesan) {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('error-screen').classList.remove('hidden');
-            document.getElementById('error-text').innerText = pesan;
+        function salinData(tipe) {
+            let textToCopy = "";
+            if (tipe === 'kode') {
+                textToCopy = document.getElementById('result-kode-kelola').innerText;
+            } else if (tipe === 'link') {
+                textToCopy = document.getElementById('result-link-kelola').href;
+            }
+            
+            navigator.clipboard.writeText(textToCopy);
+            alert("Berhasil disalin!");
+        }
+
+        function simpanKeWA() {
+            const kode = document.getElementById('result-kode-kelola').innerText;
+            const link = document.getElementById('result-link-kelola').href;
+            const pesan = `*Data Kelola Kartu Review ULASIN*\n\nKode Kelola: ${kode}\nLink Kelola: ${link}\n\nSimpan pesan ini jika sewaktu-waktu Anda ingin mengubah link Google Review Anda.`;
+            const urlWA = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
+            window.open(urlWA, '_blank');
         }
 
         window.onload = cekStatusKartu;
