@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulasin - Kelola Kartu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
+        <h1 class="text-2xl font-bold text-blue-600 mb-2">ULASIN KELOLA</h1>
+        
+        <!-- Layar Login -->
+        <div id="login-screen" class="block text-left">
+            <p class="text-sm text-gray-600 mb-4 text-center">Masukkan Kode Kelola Anda untuk mengubah link tujuan kartu.</p>
+            <input type="text" id="input-kode-kelola" placeholder="Contoh: ULS-XXXXXX" class="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-center uppercase">
+            <button onclick="loginKelola()" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-900 transition">MASUK</button>
+            <p id="login-error" class="text-red-500 text-xs mt-3 text-center hidden">Kode kelola tidak ditemukan atau salah.</p>
+        </div>
+
+        <!-- Layar Edit -->
+        <div id="edit-screen" class="hidden text-left">
+            <div class="bg-blue-50 p-3 rounded-lg mb-4 text-center">
+                <p class="text-xs text-blue-600">Bisnis Anda:</p>
+                <p id="display-nama-bisnis" class="font-bold text-blue-800"></p>
+            </div>
+            <label class="text-xs font-bold text-gray-600">Link Google Review Baru:</label>
+            <input type="url" id="input-link-baru" placeholder="https://..." class="w-full mt-1 mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="simpanLinkBaru()" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">SIMPAN PERUBAHAN</button>
+            <p id="edit-success" class="text-green-600 text-xs mt-3 text-center hidden font-bold">Perubahan berhasil disimpan!</p>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN KUNCI SUPABASE ANDA DI SINI (SAMA SEPERTI SEBELUMNYA)
+        const supabaseUrl = 'https://vpzcpbzwxdbcqsazomvj.supabase.co';
+        const supabaseKey = 'sb_publishable_UsXjJa42F6ItFqs3PYXDxw_FjRweh-L';
+        
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Simpan data kartu sementara setelah login
+        let currentCardId = null;
+
+        async function loginKelola() {
+            const inputKode = document.getElementById('input-kode-kelola').value.trim().toUpperCase();
+            if (!inputKode) return;
+
+            const { data, error } = await supabaseClient
+                .from('cards')
+                .select('*')
+                .eq('kode_kelola', inputKode)
+                .single();
+
+            if (error || !data) {
+                document.getElementById('login-error').classList.remove('hidden');
+            } else {
+                currentCardId = data.id; // Simpan ID untuk update
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('edit-screen').classList.remove('hidden');
+                
+                document.getElementById('display-nama-bisnis').innerText = data.nama_bisnis;
+                document.getElementById('input-link-baru').value = data.link_google;
+            }
+        }
+
+        async function simpanLinkBaru() {
+            const linkBaru = document.getElementById('input-link-baru').value;
+            if (!linkBaru) return;
+
+            const { error } = await supabaseClient
+                .from('cards')
+                .update({ link_google: linkBaru })
+                .eq('id', currentCardId);
+
+            if (error) {
+                alert("Gagal menyimpan data.");
+            } else {
+                document.getElementById('edit-success').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('edit-success').classList.add('hidden');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
