@@ -166,7 +166,8 @@
                 document.getElementById('activation-screen').classList.remove('hidden');
             }
         }
-async function generateLink() {
+
+        async function generateLink() {
             const linkInput = document.getElementById('input-link').value.trim();
             const errorBox = document.getElementById('error-box');
             const successBox = document.getElementById('success-box');
@@ -188,8 +189,12 @@ async function generateLink() {
             btnGenerate.disabled = true;
 
             try {
-                // Memanggil server API pribadi Anda di Vercel
+                // Memanggil server API pribadi Anda
                 const response = await fetch('/api/generate?url=' + encodeURIComponent(linkInput));
+                
+                // Jika error 404 masih terjadi, ini artinya Vercel masih dalam proses loading
+                if (!response.ok) throw new Error("Server belum siap atau ID tidak ditemukan.");
+                
                 const data = await response.json();
 
                 if (data.reviewLink) {
@@ -203,11 +208,11 @@ async function generateLink() {
                     
                     btnAktifkan.disabled = false;
                 } else {
-                    throw new Error(data.error || "Gagal membaca ID dari Google Maps.");
+                    throw new Error("Gagal membaca ID.");
                 }
             } catch (error) {
                 successBox.classList.add('hidden');
-                errorBox.innerText = "Server masih melakukan loading deployment atau link tidak valid. Silakan coba lagi dalam beberapa detik.";
+                errorBox.innerText = "Server sedang menyiapkan jalur aman. Mohon tunggu 1-2 menit lalu klik Generate lagi.";
                 errorBox.classList.remove('hidden');
                 btnAktifkan.disabled = true;
             }
